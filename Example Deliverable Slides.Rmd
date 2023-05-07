@@ -1,0 +1,193 @@
+---
+title: "**Violence and Peace in the Israel-Palestine Conflict**"
+subtitle: "Palestinian Fatalities, Economic Sentiment, and Attitudes of Acceptance Toward Israel's Statehood"
+author: "Elisabeth Foster"
+institute: "Data Analytics"
+date: "May 9, 2023"
+output:
+  xaringan::moon_reader:
+    css: 'metropolis'
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+
+library(ggplot2)
+library(tidyverse)
+library(patchwork)
+library(readxl)
+library(reshape2)
+library(vtable)
+
+ab1 = read_csv("abFULL.csv")
+ab2 = filter(ab1, !is.na(q101CLEAN),!is.na(q709CLEAN))
+
+sv <- read_excel("Support for Violence and Fatalities Data.xlsx")
+
+
+```
+
+
+# Data 
+**Sources:**
+1. United Nations Office for the Coordination of Humanitarian Affairs 
+  - Data: fatality and injury counts for the Israel-Palestine conflict 
+  - Years: 2008-2023
+  - Level of analysis: individual-level fatalities are counted when they are "the         direct result of confrontations between Palestinians and Israelis in the context      of the occupation and conflict" 
+
+2. Arab Barometer survey data 
+  - Data: public opinion surveys conducted across MENA 
+  - Years: 2006-2017 (Wave I, II, III, IV)
+  - Level of analysis: individual level data with respondents over the age of 18,         located in both rural and urban areas, from a randomly selected household
+
+**Country:** Palestine (West Bank and Gaza)
+
+
+---
+# Methodology
+**Analysis 1: Compares annual death total in the West Bank and Gaza.** 
+  - Provides background information on levels of violence against Palestinians
+
+
+**Analysis 2: Uses two survey data questions to evaluate a relationship.**
+
+ - *Q1 Economic Sentiment:* How would you evaluate the current economic situation in your country?
+      - Very good
+      - Good
+      - Bad
+      - Very bad 
+
+ - *Q2 Israel's Statehood:* Which of the following statements best expresses your opinion about the problem of Israel and Palestine?
+      - The Arab world should accept the existence of Israel as a Jewish state in the       Middle East only when the Palestinians accept it.
+      - The Arab world should not accept the existence of Israel as a Jewish state in       the Middle East.
+
+
+---
+# Analysis 1: Palestinian Fatalities 
+
+```{r, echo = FALSE, dpi = 75, fig.retina = 3}
+sv1 = 
+  sv %>%
+  filter(Year > 2007) %>%
+  select("Year", "Palestinian Fatalities in WB", "Palestinian Fatalities in G")
+
+sv2 <- melt(sv1, id.vars = "Year")
+sv2$value <-as.numeric(sv2$value)
+
+ggplot(sv2,
+       aes(x = Year,
+           y = value,
+           col = variable)) + 
+  geom_line() + 
+  theme_minimal() + 
+  labs( x = "Year",
+        y = "Fatalities",
+        title = bquote(~bold("Palestinian Fatalities by Territory 2008 to Present Day" )),
+        color = "Location") +
+  scale_colour_manual(values = c("#fee200", "#008000"),
+                      labels = c("West Bank", "Gaza"))
+
+```
+
+---
+# Analysis 1 Continued
+**Summary Statistics:**
+```{r, echo = FALSE}
+sv1$`Palestinian Fatalities in WB` <-as.numeric(sv1$`Palestinian Fatalities in WB`)
+sv1$`Palestinian Fatalities in G` <-as.numeric(sv1$`Palestinian Fatalities in G`)
+
+sumtable(sv1, 
+   title = "Table 1",
+   vars = c("Palestinian Fatalities in WB", "Palestinian Fatalities in G"),
+   summ = c('mean(x)', 'sd(x)', 'min(x)', 'max(x)'),
+   labels = c("Palestinian Fatalities in the West Bank", "Palestinian Fatalities in Gaza"))
+```
+
+
+**Implications and Explanations:**
+- Significantly more fatalities in Gaza than in the West Bank
+- Spikes in Gaza are a result of three periods of "major hostilities" amongst armed     Palestinian groups in Gaza and Israel
+    1. December 2008-January 2009
+    2. November 2012
+    3. July-August 2014 
+- Notable difference in the West Bank and Gaza is important to remember for later       analysis 
+
+---
+# Analysis 2: All Palestinian Territories 
+
+```{r, echo = FALSE, dpi = 75, fig.retina = 3}
+ggplot(ab2) +
+  aes(x=factor(q101CLEAN, level=c('very good', 'good', 'bad', 'very bad')),
+        fill = q709CLEAN) +
+  geom_bar(position = "fill") +
+  scale_fill_manual(values = c('#abd7eb', '#f47174')) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(
+    x = "Economic Sentiment",
+    y = "Percent",
+    fill = "Israel's Statehood",
+    title = bquote(~bold("Economic Sentiments and Feelings Toward Israel's Statehood")),
+    caption = "P-value: 0.1926") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45))
+```
+
+
+---
+# Analysis 2: Comparing West Bank and Gaza 
+
+```{r, echo = FALSE, dpi = 75, fig.retina = 3}
+abwb = filter(ab1, !is.na(q101CLEAN),!is.na(q709CLEAN),a1=="West Bank")
+
+wbplot = abwb %>%
+  ggplot(aes(x=factor(q101CLEAN, level=c('very good', 'good', 'bad', 'very bad')),
+      fill = q709CLEAN)) +
+  geom_bar(position = "fill", show.legend = FALSE) +
+  scale_fill_manual(values = c('#abd7eb', '#f47174')) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(
+    x = "Economic Sentiment",
+    y = "Percent",
+    fill = "Israel's Statehood",
+    title = "West Bank"
+  ) +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45))
+
+
+abg = filter(ab1, !is.na(q101CLEAN),!is.na(q709CLEAN),a1=="Gaza")
+
+gplot = abg %>%
+  ggplot(aes(x=factor(q101CLEAN, level=c('very good', 'good', 'bad', 'very bad')),
+      fill = q709CLEAN)) +
+  geom_bar(position = "fill") +
+  scale_fill_manual(values = c('#abd7eb', '#f47174')) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(
+    x = "Economic Sentiment",
+    y = "Percent",
+    fill = "Israel's Statehood",
+    title = "Gaza"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45))
+
+wbplot + gplot +
+plot_annotation(title = bquote(~bold("Economic Sentiments and Feelings Toward Israel's Statehood")),
+                caption = "P-values: West Bank 0.3487, Gaza 0.0014")
+
+```
+
+---
+# Analysis 2 Continued
+**Implications and Explanations:**
+- There **is not** a clear relationship between economic sentiment and support for Israeli statehood across all of Palestine, however, this differs when splitting the territories.
+- There **is** a statistically significant relationship between economic sentiment and support for Israeli statehood in Gaza (p-value 0.0014).
+    - As economic sentiment increases, support for Israeli statehood decreases
+- Further research could be done to understand why the relationship is different in Gaza. Possible topics to explore include: 
+    - The idea that when the economy is doing well, Gazans believe that they are            self-sustaining and thus do not need the help of Israel and/or have the capacity       to actively oppose Israel when their basic needs are met economically.  
