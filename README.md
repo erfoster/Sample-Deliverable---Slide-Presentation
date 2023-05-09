@@ -10,3 +10,5 @@ Data for the first analysis comes from the [United Nations Office for the Coordi
 
 ### Approach: 
 Using summary statistics, a line graph, multiple bar graphs, and chi-squared testing this slide deck demonstrates Palestinian fatalities and evaluates the relationship between Palestinian economic sentiments and support for Israeli statehood. 
+
+### You can view the slide deck [here](https://erfoster.github.io/Sample-Deliverable---Slide-Presentation/#1).
